@@ -1,0 +1,4 @@
+id,name,model_id/id,group_id/id,perm_read,perm_write,perm_create,perm_unlink
+access_fleet_vehicle_model_category,fleet_vehicle_model_category,model_fleet_vehicle_model_category,base.group_user,1,1,1,1
+access_stock_picking_batch,stock_picking_batch,model_stock_picking_batch,base.group_user,1,1,1,1
+access_stock_transport_dock,stock_transport_dock,model_stock_transport_dock,base.group_user,1,1,1,1
