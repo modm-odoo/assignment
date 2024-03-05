@@ -1,87 +1,48 @@
 #-*- coding: utf-8 -*-
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-from odoo import models, Command, fields, api
 
-class InheritedModel2(models.Model):
-    _inherit = ["stock.picking.batch"]
+from odoo import api, fields, models
+from datetime import timedelta
+
+class StockPickingBatch(models.Model):
+    _inherit = "stock.picking.batch"
 
     dock_id = fields.Many2one("stock.transport.dock")
     vehicle = fields.Many2one("fleet.vehicle")
-    vehicle_category_id = fields.Many2one('fleet.vehicle.model.category')
-    weight = fields.Float(compute="_compute_weight_volume")
-    volume = fields.Float(compute="_compute_weight_volume")
-    leave_id = fields.Many2one(
-        'resource.calendar.leaves',
-        help='Slot into workcenter calendar once planned',
-        check_company=True, copy=False)
-    date_start = fields.Datetime(
-        'Start',
-        compute='_compute_dates',
-        inverse='_set_dates',
-        store=True, copy=False)
-    date_finished = fields.Datetime(
-        'End',
-        compute='_compute_dates',
-        inverse='_set_dates',
-        store=True, copy=False)
-    state = fields.Selection([
-        ('pending', 'Waiting for another Vehicle'),
-        ('waiting', 'Waiting for vehicle'),
-        ('ready', 'Ready'),
-        ('progress', 'In Progress'),
-        ('done', 'Finished'),
-        ('cancel', 'Cancelled')], string='Status',
-        compute='_compute_state', store=True,
-        default='pending', copy=False, readonly=True, recursive=True, index=True)
+    vehicle_category_id = fields.Many2one("fleet.vehicle.model.category")
+    weight = fields.Float(compute="_compute_weight_volume", store=True)
+    volume = fields.Float(compute="_compute_weight_volume", store=True)
+    start_date = fields.Date(compute="_compute_dates", store=True)
+    end_date = fields.Date(compute="_compute_dates", store=True)
+    moves_count = fields.Integer(string="Move Lines", compute="_compute_moves_number", store=True)
+    transfers_count = fields.Integer(string="Transfer Lines", compute="_compute_picking_number", store=True)
 
     @api.depends("vehicle_category_id")
     def _compute_weight_volume(self):
-        move_line_ids=[]
+        for record in self:
+            weight = 0
+            volume = 0
 
-        weight = 0
-        volume = 0
+            for move_line in record.move_line_ids:
+                weight += move_line.product_id.weight * move_line.quantity
+                volume += move_line.product_id.volume * move_line.quantity
 
-        for move_line_id in self.move_line_ids:
-            move_line_ids.append(move_line_id.id)
-
-        move_lines = self.env["stock.move.line"].browse(move_line_ids)
-        # breakpoint()
-        for move_line in move_lines:
-            weight += move_line.product_id.weight * move_line.quantity
-            volume += move_line.product_id.volume * move_line.quantity
-
-        if self.vehicle_category_id.max_weight != 0:
-            self.weight = weight / self.vehicle_category_id.max_weight
-        else:
-            self.weight = 0
-
-        if self.vehicle_category_id.max_volume != 0:
-            self.volume = volume / self.vehicle_category_id.max_volume
-        else:
-            self.volume = 0
-
-    @api.depends('leave_id')
+            record.weight = (weight / record.vehicle_category_id.max_weight) * 10 if record.vehicle_category_id.max_weight != 0 else 0
+            record.volume = (volume / record.vehicle_category_id.max_volume) * 10 if record.vehicle_category_id.max_volume != 0 else 0
+            
+    @api.depends("create_date", "scheduled_date")
     def _compute_dates(self):
-        for vehicle in self:
-            vehicle.date_start = vehicle.leave_id.date_from
-            vehicle.date_finished = vehicle.leave_id.date_to
+        for record in self:
+            start_date = record.scheduled_date
+            end_date = fields.Datetime.from_string(start_date)
+            record.start_date = start_date
+            record.end_date = end_date
 
-    def _set_dates(self):
-        for wo in self.sudo():
-            if wo.leave_id:
-                if (not wo.date_start or not wo.date_finished):
-                    raise UserError(_("It is not possible to unplan one single Work Order. "
-                              "You should unplan the Manufacturing Order instead in order to unplan all the linked operations."))
-                wo.leave_id.write({
-                    'date_from': wo.date_start,
-                    'date_to': wo.date_finished,
-                })
-            elif wo.date_start and wo.date_finished:
-                wo.leave_id = wo.env['resource.calendar.leaves'].create({
-                    'name': wo.display_name,
-                    'date_from': wo.date_start,
-                    'date_to': wo.date_finished,
-                    'resource_id': wo.vehicle.id,
-                    'time_type': 'other',
-                })
+    @api.depends("move_line_ids")
+    def _compute_moves_number(self):
+        for record in self:
+            record.moves_count = len(record.move_line_ids)
+
+    @api.depends("picking_ids")
+    def _compute_picking_number(self):
+        for record in self:
+            record.transfers_count = len(record.picking_ids)

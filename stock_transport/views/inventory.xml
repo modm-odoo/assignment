@@ -7,10 +7,21 @@
         <field name="arch" type="xml">
             <xpath expr="//form/sheet/group/group/field[@name='scheduled_date']" position="after">
                 <field name="dock_id" />
-                <field name="vehicle" />
-                <field name="vehicle_category_id" />
-                <field name="weight" widget="progressbar"/>
-                <field name="volume" widget="progressbar"/>
+                <field name="vehicle" placeholder="Opel GJ45XC1234"/>
+                <field name="vehicle_category_id" placeholder="semi truck(250kg,30 m^3)" />
+                <field name="weight" widget="progressbar" invisible="not vehicle_category_id"/>
+                <field name="volume" widget="progressbar" invisible="not vehicle_category_id"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="stock_picking_volume" model="ir.ui.view">
+        <field name="name">stock.picking.volume.view.form</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.vpicktree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='scheduled_date']" position="after">
+                <field name="volume"/>
             </xpath>
         </field>
     </record>
@@ -20,8 +31,12 @@
         <field name="model">stock.picking.batch</field>
         <field name="arch" type="xml">
             <graph string="Batch Transfer">
-                <field name="scheduled_date"/>
+                <field name="scheduled_date" interval="day" />
                 <field name="vehicle_category_id"/>
+                <field name="moves_count"/>
+                <field name="transfers_count"/>
+                <field name="weight"/>
+                <field name="volume"/>
             </graph>
         </field>
     </record>
@@ -43,22 +58,20 @@
     <record id="stock_picking_batch" model="ir.actions.act_window.view">
         <field eval="10" name="sequence"/>
         <field name="view_mode">gantt</field>
+        <field name="view_id" ref="stock_transport.stock_picking_batch_view_gantt"></field>
         <field name="act_window_id" ref="stock_picking_batch.stock_picking_batch_action"/>
     </record>
 
     <record id="stock_picking_batch_view_gantt" model="ir.ui.view">
         <field name="name">stock.picking.batch.view.gantt</field>
         <field name="model">stock.picking.batch</field>
-        <field name="priority">10</field>
         <field name="arch" type="xml">
-            <gantt create="0" date_start="date_start" date_stop="date_finished"
-    
+            <gantt create="0" date_start="start_date" date_stop="end_date"
                 string="Stock Batch Picking" 
                 default_group_by="dock_id,vehicle" 
                 decoration-info="state == 'draft'"
                 decoration-success="state == 'progress'">
-                <field name="state"/>
-                <field name="vehicle_category_id"/>
+                <field name="state"></field>
             </gantt>
         </field>
     </record>

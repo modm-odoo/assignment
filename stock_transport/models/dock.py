@@ -8,5 +8,5 @@ class StockTransportDock(models.Model):
     name = fields.Char("Dock Name", required=True)
 
     _sql_constraints = [
-        ("unique_dock_name", "unique(name)", "Dock exists"),
+        ("unique_dock_name", "unique(name)", "Already exists"),
     ]
