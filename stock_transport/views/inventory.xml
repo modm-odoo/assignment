@@ -9,7 +9,7 @@
                 <field name="dock_id" />
                 <field name="vehicle" placeholder="Opel GJ45XC1234"/>
                 <field name="vehicle_category_id" placeholder="semi truck(250kg,30 m^3)" />
-                <field name="weight" widget="progressbar" invisible="not vehicle_category_id"/>
+                <field name="weight" widget="progressbar" invisible="not vehicle_category_id" sum="weight"/>
                 <field name="volume" widget="progressbar" invisible="not vehicle_category_id"/>
             </xpath>
         </field>
@@ -56,7 +56,7 @@
     </record>
 
     <record id="stock_picking_batch" model="ir.actions.act_window.view">
-        <field eval="10" name="sequence"/>
+        <field eval="30" name="sequence"/>
         <field name="view_mode">gantt</field>
         <field name="view_id" ref="stock_transport.stock_picking_batch_view_gantt"></field>
         <field name="act_window_id" ref="stock_picking_batch.stock_picking_batch_action"/>
