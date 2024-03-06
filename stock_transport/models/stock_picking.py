@@ -6,4 +6,4 @@ from datetime import timedelta
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    volume = fields.Float(default=1, string="Volume")
+    volumes = fields.Float(related="batch_id.total_volume", default=1, string="Volume")

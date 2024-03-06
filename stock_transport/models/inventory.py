@@ -15,9 +15,9 @@ class StockPickingBatch(models.Model):
     end_date = fields.Date(compute="_compute_dates", store=True)
     moves_count = fields.Integer(string="Move Lines", compute="_compute_moves_number", store=True)
     transfers_count = fields.Integer(string="Transfer Lines", compute="_compute_picking_number", store=True)
-    total_weight = fields.Float(compute="_compute_total_weight_volume")
-    total_volume = fields.Float(compute="_compute_total_weight_volume")
-    
+    total_weight = fields.Float(compute="_compute_weight_volume")
+    total_volume = fields.Float(compute="_compute_weight_volume")
+
     @api.depends("vehicle_category_id","weight","volume")
     def _compute_weight_volume(self):
         for record in self:
@@ -27,17 +27,19 @@ class StockPickingBatch(models.Model):
             for move_line in record.move_line_ids:
                 weight += move_line.product_id.weight * move_line.quantity
                 volume += move_line.product_id.volume * move_line.quantity
+                
+            record.total_weight = weight
+            record.total_volume = volume
 
-            record.weight = (weight / record.vehicle_category_id.max_weight) * 10 if record.vehicle_category_id.max_weight != 0 else 0
-            record.volume = (volume / record.vehicle_category_id.max_volume) * 10 if record.vehicle_category_id.max_volume != 0 else 0
-            
+            record.weight = (weight / record.vehicle_category_id.max_weight) * 100 if record.vehicle_category_id.max_weight != 0 else 0
+            record.volume = (volume / record.vehicle_category_id.max_volume) * 100 if record.vehicle_category_id.max_volume != 0 else 0
+
     @api.depends("scheduled_date")
     def _compute_dates(self):
         for record in self:
-            start_date = record.scheduled_date
-            end_date = fields.Datetime.from_string(start_date)
-            record.start_date = start_date
-            record.end_date = end_date
+            record.start_date = record.scheduled_date
+            record.end_date = record.scheduled_date + timedelta(days=2)
+
 
     @api.depends("move_line_ids")
     def _compute_moves_number(self):
@@ -53,9 +55,3 @@ class StockPickingBatch(models.Model):
     def _compute_display_name(self):
         for rec in self:
             rec.display_name = f'{rec.name} : ({rec.vehicle_category_id.max_weight},{rec.vehicle_category_id.max_volume})'
-
-    @api.depends('weight', 'volume')
-    def _compute_total_weight_volume(self):
-        for record in self:
-            record.total_weight = sum(rec.weight for rec in self)
-            record.total_volume = sum(rec.volume for rec in self)

@@ -11,4 +11,4 @@ class InheritedModel(models.Model):
     @api.depends('name', 'max_weight', 'max_volume')
     def _compute_display_name(self):
         for rec in self:
-            rec.display_name = f'{rec.name}/({rec.max_weight},{rec.max_volume})'
+            rec.display_name = f'{rec.name}/({rec.max_weight} kg,{rec.max_volume} m\u00b3)'
