@@ -15,7 +15,9 @@ class StockPickingBatch(models.Model):
     end_date = fields.Date(compute="_compute_dates", store=True)
     moves_count = fields.Integer(string="Move Lines", compute="_compute_moves_number", store=True)
     transfers_count = fields.Integer(string="Transfer Lines", compute="_compute_picking_number", store=True)
-
+    total_weight = fields.Float(compute="_compute_total_weight_volume")
+    total_volume = fields.Float(compute="_compute_total_weight_volume")
+    
     @api.depends("vehicle_category_id","weight","volume")
     def _compute_weight_volume(self):
         for record in self:
@@ -51,3 +53,9 @@ class StockPickingBatch(models.Model):
     def _compute_display_name(self):
         for rec in self:
             rec.display_name = f'{rec.name} : ({rec.vehicle_category_id.max_weight},{rec.vehicle_category_id.max_volume})'
+
+    @api.depends('weight', 'volume')
+    def _compute_total_weight_volume(self):
+        for record in self:
+            record.total_weight = sum(rec.weight for rec in self)
+            record.total_volume = sum(rec.volume for rec in self)

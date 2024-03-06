@@ -51,14 +51,12 @@
     <record id="stock_picking_batch_graph_action" model="ir.actions.act_window.view">
         <field eval="20" name="sequence"/>
         <field name="view_mode">graph</field>
-        <field name="view_id" ref="stock_transport.stock_picking_batch_graph"></field>
+        <field name="view_id" ref="stock_picking_batch_graph"></field>
         <field name="act_window_id" ref="stock_picking_batch.stock_picking_batch_action"/>
     </record>
 
     <record id="stock_picking_batch" model="ir.actions.act_window.view">
-        <field eval="30" name="sequence"/>
         <field name="view_mode">gantt</field>
-        <field name="view_id" ref="stock_transport.stock_picking_batch_view_gantt"></field>
         <field name="act_window_id" ref="stock_picking_batch.stock_picking_batch_action"/>
     </record>
 
