@@ -13,5 +13,5 @@
         "security/ir.model.access.csv",
         "views/fleet.xml",
         "views/inventory.xml",
-        ]
+    ]
 }

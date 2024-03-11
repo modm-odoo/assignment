@@ -40,7 +40,6 @@ class StockPickingBatch(models.Model):
             record.start_date = record.scheduled_date
             record.end_date = record.scheduled_date + timedelta(days=2)
 
-
     @api.depends("move_line_ids")
     def _compute_moves_number(self):
         for record in self:
@@ -54,4 +53,4 @@ class StockPickingBatch(models.Model):
     @api.depends("vehicle_category_id")
     def _compute_display_name(self):
         for rec in self:
-            rec.display_name = f'{rec.name} : ({rec.vehicle_category_id.max_weight},{rec.vehicle_category_id.max_volume})'
+            rec.display_name = f'{rec.name} : ({rec.weight},{rec.volume})'

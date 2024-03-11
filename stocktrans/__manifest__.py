@@ -9,8 +9,8 @@
     "application": True,
     "auto_install": True,
     "license": "OEEL-1",
-    "depends": ["base", "stock", "fleet", "mail",], 
+    "depends": ["base", "stock", "fleet",], 
     "data": [
         "views/inherited_setting.xml",
-        ]
+    ]
 }
